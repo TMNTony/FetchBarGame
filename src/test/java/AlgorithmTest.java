@@ -4,11 +4,11 @@ import org.junit.Test;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -24,7 +24,6 @@ public class AlgorithmTest {
     }
 
 
-
     @Test
     public void resetTest() {
         // Fill in left side of sheet
@@ -33,17 +32,24 @@ public class AlgorithmTest {
         // Click on "Reset" button
         clickReset(driver);
 
+        // Assert sheet is empty
+        for (int i = 0; i < 9; i++) {
+            WebElement bowlInput = driver.findElement(By.id("left_" + i));
+            String actualValue = bowlInput.getAttribute("value");
+            assertEquals("", actualValue);
+        }
+
     }
 
     @Test
     public void weighButtonTest() {
-        //Fill left side of sheet
+        // Fill left side of sheet
         fillSheet(driver, "left");
-        //Click weigh button
+        // Click weigh button
         clickWeigh(driver);
-        //Delay result
+        // Delay result
         delayResult(driver, 3);
-        //Get result and assert the correct comparator sign
+        // Get result and assert the correct comparator sign
         String result = getResult(driver);
         assertTrue(result.contains(">"));
     }
@@ -59,7 +65,9 @@ public class AlgorithmTest {
             assertEquals(i, actualValue);
         }
         clickReset(driver);
+        //Fill right sheet
         fillSheet(driver, "right");
+        //Assert that values match
         for (int i = 0; i < 9; i++) {
             WebElement bowlInput = driver.findElement(By.id("right_" + i));
             int actualValue = Integer.parseInt(bowlInput.getAttribute("value"));
@@ -68,34 +76,35 @@ public class AlgorithmTest {
     }
 
     @Test
-    public void getResultsTest(){
+    public void getResultsTest() {
         fillSheet(driver, "left");
         clickWeigh(driver);
         delayResult(driver, 3);
         String[] weightings = getWeighings();
         assertEquals(1, weightings.length);
     }
+
     @Test
     public void fetchAlgorithmTest() {
-        //Compare sets
+        // Compare sets
         int[] result = compareSets(driver);
-        //Compare returned set
+        // Compare returned set
         int answer = compareSet(driver, result);
-        //Click answer
+        // Click answer
         clickAnswer(answer);
 
-        //Get alert message;
+        // Get alert message
         Alert alert = driver.switchTo().alert();
         String alertText = alert.getText();
 
         // Close the alert
         alert.accept();
 
-        //Assert alert message indicates correct answer
+        // Assert alert message indicates correct answer
         String expectedAlertText = "Yay! You find it!";
         assertEquals(expectedAlertText, alertText);
 
-        //Assert that answer was found after 2 weightings
+        // Assert that answer was found after 2 weightings
         assertEquals(2, getWeighings().length);
     }
 
@@ -109,13 +118,13 @@ public class AlgorithmTest {
     }
 
     private void clickWeigh(WebDriver driver) {
-        //Get and click weigh button
+        // Get and click weigh button
         WebElement weighButton = driver.findElement(By.id("weigh"));
         weighButton.click();
     }
 
     public static void clickReset(WebDriver driver) {
-        //Get and click reset button
+        // Get and click reset button
         List<WebElement> resetButtons = driver.findElements(By.id("reset"));
         for (WebElement resetButton : resetButtons) {
             if (resetButton.isEnabled()) {
@@ -126,7 +135,7 @@ public class AlgorithmTest {
 
     public static String getResult(WebDriver driver) {
         String result = null;
-        //Find result button that is not enabled
+        // Find result button that is not enabled
         List<WebElement> resetButtons = driver.findElements(By.id("reset"));
         for (WebElement resetButton : resetButtons) {
             if (!resetButton.isEnabled()) {
@@ -137,7 +146,7 @@ public class AlgorithmTest {
     }
 
     public static void fillSheet(WebDriver driver, String side) {
-        //Fill left side of sheet for testing0
+        // Fill left side of sheet for testing
         for (int i = 0; i <= 8; i++) {
             WebElement bowlInput = driver.findElement(By.id(side + "_" + i)); // Replace with actual IDs
             bowlInput.sendKeys(Integer.toString(i));
@@ -146,7 +155,7 @@ public class AlgorithmTest {
 
     public int[] compareSets(WebDriver driver) {
         int[] lightestSet;
-        //Separate into 3 equal sets of three bars
+        // Separate into 3 equal sets of three bars
         for (int i = 0; i < 3; i++) {
             WebElement bowlInput = driver.findElement(By.id("left_" + i));
             bowlInput.sendKeys(Integer.toString(i));
@@ -155,13 +164,13 @@ public class AlgorithmTest {
             WebElement bowlInput = driver.findElement(By.id("right_" + i));
             bowlInput.sendKeys(Integer.toString(i));
         }
-        //Weigh bars
+        // Weigh bars
         clickWeigh(driver);
         // Add a delay
         delayResult(driver, 3);
-        //Get result
+        // Get result
         String result = getResult(driver);
-        //Find the lightest of the 3 sets
+        // Find the lightest of the 3 sets
         if (result.equals("<")) {
             lightestSet = new int[]{0, 1, 2};
         } else if (result.equals(">")) {
@@ -173,13 +182,14 @@ public class AlgorithmTest {
         clickReset(driver);
         return lightestSet;
     }
-        //Delay results until comparison figures are present in page
+
+        // Delay results until comparison figures are present in page
     public void delayResult(WebDriver driver, int seconds) {
+        // Find results element
         List<WebElement> resetButtons = driver.findElements(By.id("reset"));
         WebElement results = resetButtons.stream().filter(resetButton -> !resetButton.isEnabled()).findFirst().orElse(null);
 
-        // Exit the loop once a disabled reset button is found
-
+        // Wait until results element displays something other than "?"
         if (results != null) {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(seconds));
             wait.until(d -> {
@@ -190,10 +200,10 @@ public class AlgorithmTest {
     }
 
 
-    public int compareSet(WebDriver driver, int[] set){
+    public int compareSet(WebDriver driver, int[] set) {
         String result;
         int answer;
-        //Input first 2 numbers in set to right and left fields
+        // Input first 2 numbers in set to right and left fields
         WebElement bowlInputLeft = driver.findElement(By.id("left_0"));
         bowlInputLeft.sendKeys(Integer.toString(set[0]));
 
@@ -202,9 +212,9 @@ public class AlgorithmTest {
 
         clickWeigh(driver);
         delayResult(driver, 3);
-        //Find the smallest bar based on comparison
+        // Find the smallest bar based on comparison
         result = getResult(driver);
-        if (result.equals("<")){
+        if (result.equals("<")) {
             answer = set[0];
         } else if (result.equals(">")) {
             answer = set[1];
@@ -213,12 +223,15 @@ public class AlgorithmTest {
         }
         return answer;
     }
-    public void clickAnswer(int answer){
-        //Find and click answer
+
+    public void clickAnswer(int answer) {
+        // Find and click answer
         WebElement answerButton = driver.findElement(By.id("coin_" + answer));
         answerButton.click();
     }
-    public String[] getWeighings(){
+
+        // Retrieves results of weighing
+    public String[] getWeighings() {
         WebElement gameBoard = driver.findElement(By.className("game-info"));
         List<WebElement> weighings = gameBoard.findElements(By.tagName("li"));
 
