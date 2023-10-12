@@ -4,6 +4,10 @@ import org.junit.Test;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -38,7 +42,7 @@ public class AlgorithmTest {
         //Click weigh button
         clickWeigh(driver);
         //Delay result
-        delayResult();
+        delayResult(driver, 3);
         //Get result and assert the correct comparator sign
         String result = getResult(driver);
         assertTrue(result.contains(">"));
@@ -67,7 +71,7 @@ public class AlgorithmTest {
     public void getResultsTest(){
         fillSheet(driver, "left");
         clickWeigh(driver);
-        delayResult();
+        delayResult(driver, 3);
         String[] weightings = getWeighings();
         assertEquals(1, weightings.length);
     }
@@ -154,7 +158,7 @@ public class AlgorithmTest {
         //Weigh bars
         clickWeigh(driver);
         // Add a delay
-        delayResult();
+        delayResult(driver, 3);
         //Get result
         String result = getResult(driver);
         //Find the lightest of the 3 sets
@@ -169,16 +173,25 @@ public class AlgorithmTest {
         clickReset(driver);
         return lightestSet;
     }
-    public void delayResult(){
-        try {
-            // Wait for 5 seconds
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        //Delay results until comparison figures are present in page
+    public void delayResult(WebDriver driver, int seconds) {
+        List<WebElement> resetButtons = driver.findElements(By.id("reset"));
+        WebElement results = resetButtons.stream().filter(resetButton -> !resetButton.isEnabled()).findFirst().orElse(null);
+
+        // Exit the loop once a disabled reset button is found
+
+        if (results != null) {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(seconds));
+            wait.until(d -> {
+                String resultsText = results.getText();
+                return !resultsText.equals("?");
+            });
         }
     }
+
+
     public int compareSet(WebDriver driver, int[] set){
-        String result = null;
+        String result;
         int answer;
         //Input first 2 numbers in set to right and left fields
         WebElement bowlInputLeft = driver.findElement(By.id("left_0"));
@@ -188,7 +201,7 @@ public class AlgorithmTest {
         bowlInputRight.sendKeys(Integer.toString(set[1]));
 
         clickWeigh(driver);
-        delayResult();
+        delayResult(driver, 3);
         //Find the smallest bar based on comparison
         result = getResult(driver);
         if (result.equals("<")){
