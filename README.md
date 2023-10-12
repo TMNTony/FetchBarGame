@@ -20,4 +20,4 @@ what the lightest bar in that group is using the same logic from the first weigh
 that bar is the fake. If they weigh the same, the third unweighed bar is fake. The test will then click on the result of
 the second weighing.
 
-The algorithm guarantees finding the lightest after the second weighing.
+The algorithm guarantees finding the fake bar after the second weighing.
